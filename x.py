@@ -26,6 +26,24 @@ class AbletonCollection:
         self.projects = {}  # Map dirpaths to projects
         self._find_projects()
 
+    def check_file_used(self, filename):
+        used = {}
+        for projpath, proj in self.projects.items():
+            sets = proj.check_file_used(filename) 
+            if sets:
+                used[projpath] = sets
+        return used
+
+    def check_dir_used(self, dirname):
+        used = {}
+        for dirpath, dirnames, filenames in os.walk(dirname):
+            for fname in filenames:
+                full = os.path.join(dirpath, fname)
+                results = self.check_file_used(full)
+                if results:
+                    used[fname] = results
+        return used
+
     def _get_existing_project(self, dirpath):
         """
         Check if dirpath is within an existing project, or not.
@@ -94,12 +112,17 @@ class AbletonProject:
         self.path = path
         self.sets = []
 
+    def check_file_used(self, filename):
+        sets = []
+        for set in self.sets:
+            if set.check_file_used(filename):
+                sets.append(set.name)
+        return sets
+
     def __repr__(self):
         return f'<{self.path} AbletonProject>'
 
 class AbletonSet:
-    SUPPORTED_VERSION = 5
-
     @classmethod
     def fromfile(cls, filename, **kwargs):
         with gzip.open(os.path.expanduser(filename)) as f:
@@ -112,7 +135,6 @@ class AbletonSet:
         self.name = name
         self.raw_xml = xml
         self.parsed_xml = None
-        self.major_version = None
 
         # Files used by this Ableton set. Equivalent to the Ableton
         # 'View Files' button in File Manager
@@ -122,21 +144,10 @@ class AbletonSet:
             self.parse()
 
     def parse(self):
-        self.parsed_xml = ET.fromstring(self.raw_xml)
-        self.major_version = self._get_major_version()
+        # self.parsed_xml = ET.fromstring(self.raw_xml)
 
-        # TODO: maybe rm this
-        self._check_version()
-
-        self.files = self._get_files()
-
-    def _check_version(self):
-        pass
-        # if self.major_version != self.SUPPORTED_VERSION:
-        #     raise Exception('Unsupported set version')
-
-    def _get_major_version(self):
-        return int(self.parsed_xml.attrib['MajorVersion'])
+        # self.files = self._get_files()
+        self.files = self._get_files_fast()
 
     def _get_files(self):
         files = set()
@@ -148,7 +159,35 @@ class AbletonSet:
                 files.add(sample_filename)
         return files
 
+    def _get_files_fast(self):
+        START_TAG = b'<SampleRef>'
+        END_TAG = b'</SampleRef>'
+
+        files = set()
+        pos = 0
+        while True:
+            start = self.raw_xml.find(START_TAG, pos)
+            if start == -1:
+                break
+            end = self.raw_xml.find(END_TAG, start) + len(END_TAG)
+
+            pos = end
+
+            sample_ref_str = self.raw_xml[start:end]
+            sample_ref_elem = ET.fromstring(sample_ref_str)
+            file_ref_elem = sample_ref_elem.find('FileRef')
+            name_elem = file_ref_elem.find('Name')
+            sample_filename = name_elem.attrib['Value']
+            files.add(sample_filename)
+
+
+            # import ipdb; ipdb.set_trace()
+
+        return files
+
     def check_file_used(self, filename):
+        # print(os.path.basename(filename))
+        # print(self.files)
         return os.path.basename(filename) in self.files
 
 def get_args():
@@ -160,7 +199,6 @@ def get_args():
 
 def main():
     args = get_args()
-    # sample can be fullpath or just base
 
     try:
         aset = AbletonSet.fromfile(args.als)
@@ -177,15 +215,35 @@ def test():
     print(s.files)
     print(len(s.files))
     assert len(s.files) == 26
-    assert s.major_version == 5
 
 def test_coll():
     coll = AbletonCollection('~/Music/Ableton')
-    print(coll.projects)
+    print(coll.projects.keys())
     # import IPython; IPython.embed()
+
+def test_check_coll():
+    coll = AbletonCollection('~/Music/Ableton')
+    # print(coll.check_file_used('Perfect White Noise Transition.wav'))
+    # print(coll.check_file_used("Kick Nebula Hard.aif"))
+    print(coll.check_file_used("natural crash.wav"))
+
+def test_check_pack():
+    coll = AbletonCollection('~/Music/Ableton')
+    # print(coll.check_file_used('Perfect White Noise Transition.wav'))
+    # print(coll.check_file_used("Kick Nebula Hard.aif"))
+    usage = coll.check_dir_used("/Users/mark/music/recording/samples/_drumkits/ginseng drum kit VOL 3")
+    for file, usa in usage.items():
+        print(file)
+        for proj, sets in usa.items():
+            print('\t', proj)
+            for set in sets:
+                print('\t\t', set)
+
 
 # main()
 # test()
-test_coll()
+# test_coll()
+# test_check_coll()
+test_check_pack()
 
 
