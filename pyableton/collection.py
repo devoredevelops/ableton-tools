@@ -19,7 +19,7 @@ class AbletonCollection:
     def check_file_used(self, filename):
         used = {}
         for projpath, proj in self.projects.items():
-            sets = proj.check_file_used(filename) 
+            sets = proj.check_file_used(filename)
             if sets:
                 used[projpath] = sets
         return used
@@ -57,8 +57,6 @@ class AbletonCollection:
         Search dir for all projects and sets.
         """
         for dirpath, dirnames, filenames in os.walk(self.dirname):
-            # print(dirpath, dirnames, filenames)
-
             # Backup dirs have extra als sets that we might not care about.
             # Might slow things down a lot. Not sure if we want them yet.
             # Checking `in` and not `endswith` bc if you create dirs inside
@@ -71,16 +69,7 @@ class AbletonCollection:
             if not set_names:
                 continue
 
-            # print(set_names)
-
-            # if set names, and its def a new project, create new
-
-            # if set names, but not a new project, just add these sets
-            # to that project. requires quick way to look up a set by
-            # its name - dict
-
             set_paths = [os.path.join(dirpath, sname) for sname in set_names]
-            # sets = [AbletonSet.fromfile(spath, lazy=True) for spath in set_paths]
             sets = [AbletonSet.fromfile(spath, lazy=False) for spath in set_paths]
 
             existing_dirpath = self._get_existing_project(dirpath)
@@ -94,4 +83,3 @@ class AbletonCollection:
                 self.projects[dirpath] = proj
 
                 logging.debug(f'Added new proj: {pname}')
-                # print(proj, proj.sets)
