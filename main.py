@@ -1,4 +1,3 @@
-import pickle
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -6,15 +5,6 @@ logging.basicConfig(level=logging.DEBUG)
 from argparse import ArgumentParser
 
 from pyableton import AbletonCollection, AbletonProject, AbletonSet
-
-'''
-./tool samplefile.wave ableton.als
-
-decompress it in memory
-parse the xml
-'''
-
-
 
 
 def get_args():
@@ -37,16 +27,7 @@ def main():
     print(is_used)
 
 
-def test():
-    s = AbletonSet.fromfile('~/Music/Ableton/dan shay Project/dan shay.als')
-    print(s.files)
-    print(len(s.files))
-    assert len(s.files) == 26
 
-def test_coll():
-    coll = AbletonCollection('~/Music/Ableton')
-    print(coll.projects.keys())
-    # import IPython; IPython.embed()
 
 def test_check_coll():
     coll = AbletonCollection('~/Music/Ableton')
