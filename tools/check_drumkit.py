@@ -3,7 +3,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 from argparse import ArgumentParser
 
-from pyableton import AbletonCollection, AbletonProject, AbletonSet
+from pyableton import AbletonCollection
 
 
 def get_args():
