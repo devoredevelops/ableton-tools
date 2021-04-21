@@ -5,11 +5,7 @@ class AbletonProject:
         self.sets = []
 
     def check_file_used(self, filename):
-        sets = []
-        for set in self.sets:
-            if set.check_file_used(filename):
-                sets.append(set.name)
-        return sets
+        return [set.name for set in self.sets if set.check_file_used(filename)]
 
     def __repr__(self):
         return f'<{self.path} AbletonProject>'

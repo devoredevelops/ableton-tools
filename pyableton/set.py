@@ -32,17 +32,16 @@ class AbletonSet:
         self.files = self._get_files_fast()
 
     def _get_files(self):
-        files = set()
-        for elem in self.parsed_xml.iter():
-            if elem.tag == 'SampleRef':
-                files.add(self._get_sample_filename(elem))
-        return files
+        return {
+            self._get_sample_filename(elem)
+            for elem in self.parsed_xml.iter()
+            if elem.tag == 'SampleRef'
+        }
 
     def _get_sample_filename(self, sample_ref_elem):
-            file_ref_elem = sample_ref_elem.find('FileRef')
-            name_elem = file_ref_elem.find('Name')
-            sample_filename = name_elem.attrib['Value']
-            return sample_filename
+        file_ref_elem = sample_ref_elem.find('FileRef')
+        name_elem = file_ref_elem.find('Name')
+        return name_elem.attrib['Value']
 
     def _get_files_fast(self):
         START_TAG = b'<SampleRef>'
