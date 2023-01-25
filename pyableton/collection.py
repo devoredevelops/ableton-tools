@@ -19,8 +19,7 @@ class AbletonCollection:
     def check_file_used(self, filename):
         used = {}
         for projpath, proj in self.projects.items():
-            sets = proj.check_file_used(filename)
-            if sets:
+            if sets := proj.check_file_used(filename):
                 used[projpath] = sets
         return used
 
@@ -29,8 +28,7 @@ class AbletonCollection:
         for dirpath, dirnames, filenames in os.walk(dirname):
             for fname in filenames:
                 full = os.path.join(dirpath, fname)
-                results = self.check_file_used(full)
-                if results:
+                if results := self.check_file_used(full):
                     used[fname] = results
         return used
 
@@ -72,8 +70,7 @@ class AbletonCollection:
             set_paths = [os.path.join(dirpath, sname) for sname in set_names]
             sets = [AbletonSet.fromfile(spath, lazy=False) for spath in set_paths]
 
-            existing_dirpath = self._get_existing_project(dirpath)
-            if existing_dirpath:
+            if existing_dirpath := self._get_existing_project(dirpath):
                 proj = self.projects[existing_dirpath]
                 proj.sets += sets
             else:
